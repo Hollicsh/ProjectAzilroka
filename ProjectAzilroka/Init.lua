@@ -452,8 +452,8 @@ do
 			local info = GetSpellBookItemInfo(index, bookType)
 			local flyoutID, spellName = PA.Retail and info.actionID or info.spellID
 
-			if info.itemType == 1 or info.itemType == 3 then
-				if not PA.Retail and info.subName then spellName = format('%s %s', info.name, info.subName) end
+			if (info.itemType == 1 or info.itemType == 3) and info.spellID then
+				if PA.Classic and info.subName then spellName = format('%s %s', info.name, info.subName or '') end
 				PA.SpellBook.Complete[info.spellID] = info
 				if scanTooltip(info.spellID) then PA.SpellBook.Spells[info.spellID] = spellName or true end
 			elseif info.itemType == 4 then
@@ -595,7 +595,7 @@ function PA:PLAYER_LOGIN()
 	PA.EP = LibStub('LibElvUIPlugin-1.0', true)
 	PA.Options.childGroups = PA.EC and 'tab' or 'tree'
 
-	PA:ScanSpellBook()
+	PA:CallModuleFunction(PA, PA.ScanSpellBook)
 
 	for _, module in PA:IterateModules() do
 		if module.BuildProfile then PA:CallModuleFunction(module, module.BuildProfile) end
