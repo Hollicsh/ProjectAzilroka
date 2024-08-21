@@ -8,7 +8,7 @@ _G.ProjectAzilroka = Engine
 
 local min, max = min, max
 local select = select
-local pairs = pairs
+local next = next
 local sort = sort
 local gsub = gsub
 local tinsert = tinsert
@@ -45,9 +45,12 @@ PA.Libs = {
 	LCD = LibStub("LibClassicDurations", true),
 }
 
+local ACL, ACH = PA.Libs.ACL, PA.Libs.ACH
+
 Engine[1] = PA
-Engine[2] = PA.Libs.ACL
-Engine[3] = PA.Libs.ACH
+Engine[2] = ACL
+Engine[3] = ACH
+
 
 if PA.Libs.LCD then
 	PA.Libs.LCD:Register(AddOnName) 	-- Register LibClassicDurations
@@ -110,14 +113,14 @@ PA.Authors = GetAddOnMetadata('ProjectAzilroka', 'Author'):gsub(', ', '    ')
 
 PA.AllPoints = { CENTER = 'CENTER', BOTTOM = 'BOTTOM', TOP = 'TOP', LEFT = 'LEFT', RIGHT = 'RIGHT', BOTTOMLEFT = 'BOTTOMLEFT', BOTTOMRIGHT = 'BOTTOMRIGHT', TOPLEFT = 'TOPLEFT', TOPRIGHT = 'TOPRIGHT' }
 PA.GrowthDirection = {
-	DOWN_RIGHT = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Down"], PA.Libs.ACL["Right"]),
-	DOWN_LEFT = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Down"], PA.Libs.ACL["Left"]),
-	UP_RIGHT = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Up"], PA.Libs.ACL["Right"]),
-	UP_LEFT = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Up"], PA.Libs.ACL["Left"]),
-	RIGHT_DOWN = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Right"], PA.Libs.ACL["Down"]),
-	RIGHT_UP = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Right"], PA.Libs.ACL["Up"]),
-	LEFT_DOWN = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Left"], PA.Libs.ACL["Down"]),
-	LEFT_UP = format(PA.Libs.ACL["%s and then %s"], PA.Libs.ACL["Left"], PA.Libs.ACL["Up"]),
+	DOWN_RIGHT = format(ACL["%s and then %s"], ACL["Down"], ACL["Right"]),
+	DOWN_LEFT = format(ACL["%s and then %s"], ACL["Down"], ACL["Left"]),
+	UP_RIGHT = format(ACL["%s and then %s"], ACL["Up"], ACL["Right"]),
+	UP_LEFT = format(ACL["%s and then %s"], ACL["Up"], ACL["Left"]),
+	RIGHT_DOWN = format(ACL["%s and then %s"], ACL["Right"], ACL["Down"]),
+	RIGHT_UP = format(ACL["%s and then %s"], ACL["Right"], ACL["Up"]),
+	LEFT_DOWN = format(ACL["%s and then %s"], ACL["Left"], ACL["Down"]),
+	LEFT_UP = format(ACL["%s and then %s"], ACL["Left"], ACL["Up"]),
 }
 
 PA.ElvUI = PA:IsAddOnEnabled('ElvUI', PA.MyName)
@@ -136,8 +139,8 @@ end
 PA.oUF = GetoUF()
 
 PA.Classes = {}
-for k, v in pairs(_G.LOCALIZED_CLASS_NAMES_MALE) do PA.Classes[v] = k end
-for k, v in pairs(_G.LOCALIZED_CLASS_NAMES_FEMALE) do PA.Classes[v] = k end
+for k, v in next, _G.LOCALIZED_CLASS_NAMES_MALE do PA.Classes[v] = k end
+for k, v in next, _G.LOCALIZED_CLASS_NAMES_FEMALE do PA.Classes[v] = k end
 
 function PA:ClassColorCode(class)
 	local color = PA:GetClassColor(PA.Classes[class])
@@ -194,11 +197,13 @@ function PA:ShortValue(value)
 	end
 end
 
+local function clamp(v, min, max)
+	min, max = min or 0, max or 1
+	return v > max and max or v < min or v
+end
+
 function PA:RGBToHex(r, g, b, header, ending)
-	r = r <= 1 and r >= 0 and r or 1
-	g = g <= 1 and g >= 0 and g or 1
-	b = b <= 1 and b >= 0 and b or 1
-	return format('%s%02x%02x%02x%s', header or '|cff', r*255, g*255, b*255, ending or '')
+	return format('%s%02x%02x%02x%s', header or '|cff', clamp(r) * 255, clamp(g) * 255, clamp(b) * 255, ending or '')
 end
 
 function PA:HexToRGB(hex)
@@ -210,7 +215,7 @@ function PA:HexToRGB(hex)
 end
 
 function PA:ConflictAddOn(AddOns)
-	for AddOn in pairs(AddOns) do
+	for AddOn in next, AddOns do
 		if PA:IsAddOnEnabled(AddOn, PA.MyName) then
 			return true
 		end
@@ -241,7 +246,7 @@ end
 function PA:AddKeysToTable(current, tbl)
 	if type(current) ~= 'table' then return end
 
-	for key, value in pairs(tbl) do
+	for key, value in next, tbl do
 		if current[key] == nil then
 			current[key] = value
 		end
@@ -301,7 +306,7 @@ function PA:CopyTable(current, default)
 	end
 
 	if type(default) == 'table' then
-		for option, value in pairs(default) do
+		for option, value in next, default do
 			current[option] = (type(value) == 'table' and PA:CopyTable(current[option], value)) or value
 		end
 	end
@@ -328,20 +333,17 @@ end
 -- backwards compatibility
 do
 	-- Unit Aura
-	local GetAuraDataByIndex = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
-	local UnpackAuraData = AuraUtil and AuraUtil.UnpackAuraData
-	local UnitAura = UnitAura
+	local GetAuraDataByIndex = C_UnitAuras.GetAuraDataByIndex
 
 	function PA:GetAuraData(unitToken, index, filter)
+		local auraData = GetAuraDataByIndex(unitToken, index, filter)
 		if PA.Classic and PA.Libs.LCD and not UnitIsUnit('player', unitToken) then
-			local name, texture, count, debuffType, duration, expiration, caster, isStealable, nameplateShowSelf, spellID, canApply, isBossDebuff, casterIsPlayer, nameplateShowAll, timeMod = PA.Libs.LCD:UnitAura(unitToken, index, filter)
 			local durationNew, expirationTimeNew
-			if spellID then durationNew, expirationTimeNew = PA.Libs.LCD:GetAuraDurationByUnit(unit, spellID, caster, name) end
-			if durationNew and durationNew > 0 then duration, expiration = durationNew, expirationTimeNew end
-			return name, texture, count, debuffType, duration, expiration, caster, isStealable, nameplateShowSelf, spellID, canApply, isBossDebuff, casterIsPlayer, nameplateShowAll, timeMod
+			if spellID then durationNew, expirationTimeNew = PA.Libs.LCD:GetAuraDurationByUnit(unit, auraData.spellId, caster, name) end
+			if durationNew and durationNew > 0 then auraData.duration, auraData.expirationTime = durationNew, expirationTimeNew end
 		end
 
-		return UnpackAuraData(GetAuraDataByIndex(unitToken, index, filter))
+		return auraData
 	end
 
 	-- GetMouseFocus
@@ -369,7 +371,7 @@ do
 				local name = list.text or ('test'..depth)
 
 				local func = (list.arg1 or list.arg2) and (function() list.func(nil, list.arg1, list.arg2) end) or list.func
-				local checked = list.checked and (not list.notCheckable and function() return list.checked(list) end) or E.noop
+				local checked = list.checked and (not list.notCheckable and function() return list.checked(list) end or PA.Noop)
 				if checked then
 					previous = root:CreateCheckbox(list.text or name, checked, func)
 				else
@@ -398,37 +400,42 @@ do
 	local HasPetSpells = C_SpellBook.HasPetSpells or HasPetSpells
 
 	local GetSpellCooldown = C_Spell.GetSpellCooldown or function(info, bookType)
-		local startTime, duration, isEnabled, modRate
+		local info = {}
 		if bookType then
-			startTime, duration, isEnabled, modRate = _G.GetSpellCooldown(info, bookType)
+			info.startTime, info.duration, info.isEnabled, info.modRate = _G.GetSpellCooldown(info, bookType)
 		else
-			startTime, duration, isEnabled, modRate = _G.GetSpellCooldown(info)
+			info.startTime, info.duration, info.isEnabled, info.modRate = _G.GetSpellCooldown(info)
 		end
-		return { startTime = startTime, duration = duration, isEnabled = isEnabled, modRate = modRate }
+		return info
 	end
 
 	local GetSpellCharges = C_Spell.GetSpellCharges or function(index, bookType)
-		local currentCharges, maxCharges, cooldownStart, cooldownDuration, chargeModRate = GetSpellCharges(info, bookType)
-		return { currentCharges	= currentCharges, maxCharges = maxCharges, cooldownStartTime = cooldownStart, cooldownDuration = cooldownDuration, chargeModRate = chargeModRate }
+		local info = {}
+		info.currentCharges, info.maxCharges, info.cooldownStartTime, info.cooldownDuration, info.chargeModRate = GetSpellCharges(info, bookType)
+		return info
 	end
 
 	local bookTypes = { SPELL = 1, FUTURESPELL = 2, PETACTION = 3, FLYOUT = 4 }
 	local GetSpellBookItemInfo = C_SpellBook.GetSpellBookItemInfo or function(index, bookType)
-		local spellType, id = GetSpellBookItemInfo(index, bookType)
-		local _, spellSubName = GetSpellBookItemName(index, bookType)
-		local name, _, icon, castTime, minRange, maxRange, spellID, originalIcon = GetSpellInfo(index, bookType)
-		return { actionID = id, spellID = spellID, itemType = bookTypes[spellType], name = name, subName = spellSubName or '', iconID = icon, isPassive = false, isOffSpec = false, skillLineIndex = index }
+		local info, _ = { isPassive = false, isOffSpec = false, skillLineIndex = index }
+		info.itemType, info.actionID = GetSpellBookItemInfo(index, bookType)
+		_, info.subName = GetSpellBookItemName(index, bookType)
+		info.name, _, info.iconID, _, _, _, info.spellID = GetSpellInfo(index, bookType)
+		info.itemType = bookTypes[info.itemType]
+		return info
 	end
 
 	local GetSpellInfo = C_Spell.GetSpellInfo or function(index, bookType)
-		local name, _, iconID, castTime, minRange, maxRange, spellID, originalIcon = GetSpellInfo(index, bookType)
-		return { name = name, iconID = iconID, castTime = castTime, minRange = minRange, maxRange = maxRange, spellID = spellID, originalIcon = originalIcon }
+		local info, _ = {}
+		info.name, _, info.iconID, info.castTime, info.minRange, info.maxRange, info.spellID, info.originalIcon = GetSpellInfo(index, bookType)
+		return info
 	end
 
 	local GetNumSpellBookSkillLines = C_SpellBook.GetNumSpellBookSkillLines or GetNumSpellTabs
 	local GetSpellBookSkillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo or function(index)
-		local name, texture, offset, numSlots, isGuild, offspecID = GetSpellTabInfo(index)
-		return { name = name, iconID = texture, itemIndexOffset = offset, numSpellBookItems = numSlots, isGuild = isGuild, offSpecID = offspecID, shouldHide = false, specID = false }
+		local info = { shouldHide = false }
+		info.name, info.iconID, info.itemIndexOffset, info.numSpellBookItems, info.isGuild, info.offspecID = GetSpellTabInfo(index)
+		return info
 	end
 
 	-- Need for modules
@@ -440,7 +447,7 @@ do
 
 	-- Simpy Magic
 	local t = {}
-	for _, name in pairs({'SPELL_RECAST_TIME_SEC','SPELL_RECAST_TIME_MIN','SPELL_RECAST_TIME_CHARGES_SEC','SPELL_RECAST_TIME_CHARGES_MIN'}) do
+	for _, name in next, { 'SPELL_RECAST_TIME_SEC', 'SPELL_RECAST_TIME_MIN', 'SPELL_RECAST_TIME_CHARGES_SEC', 'SPELL_RECAST_TIME_CHARGES_MIN' } do
 		t[name] = _G[name]:gsub('%%%.%dg','[%%d%%.]-'):gsub('%.$','%%.'):gsub('^(.-)$','^%1$')
 	end
 
@@ -528,7 +535,7 @@ do
 end
 
 _G.StaticPopupDialogs["PROJECTAZILROKA"] = {
-	text = PA.Libs.ACL["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."],
+	text = ACL["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."],
 	button1 = _G.ACCEPT,
 	button2 = _G.CANCEL,
 	OnAccept = _G.ReloadUI,
@@ -538,7 +545,7 @@ _G.StaticPopupDialogs["PROJECTAZILROKA"] = {
 }
 
 _G.StaticPopupDialogs["PROJECTAZILROKA_RL"] = {
-	text = PA.Libs.ACL["This setting requires that you reload your User Interface."],
+	text = ACL["This setting requires that you reload your User Interface."],
 	button1 = _G.ACCEPT,
 	button2 = _G.CANCEL,
 	OnAccept = _G.ReloadUI,
@@ -583,13 +590,17 @@ PA.Defaults = {
 	}
 }
 
-PA.Options = PA.Libs.ACH:Group(PA:Color(PA.Title), nil, 6)
+PA.Options = ACH:Group(PA:Color(PA.Title), nil, 6)
 
 function PA:GetOptions()
 	if _G.ElvUI then _G.ElvUI[1].Options.args.ProjectAzilroka = PA.Options end
 end
 
 function PA:BuildProfile()
+	for _, module in PA:IterateModules() do
+		if module.BuildProfile then PA:ProtectedCall(module, module.BuildProfile) end
+	end
+
 	PA.data = PA.Libs.ADB:New('ProjectAzilrokaDB', PA.Defaults, true)
 
 	PA.data.RegisterCallback(PA, 'OnProfileChanged', 'SetupProfile')
@@ -623,11 +634,6 @@ function PA:PLAYER_LOGIN()
 	PA.Libs.EP = LibStub('LibElvUIPlugin-1.0', true)
 
 	PA:ProtectedCall(PA, PA.ScanSpellBook)
-
-	for _, module in PA:IterateModules() do
-		if module.BuildProfile then PA:ProtectedCall(module, module.BuildProfile) end
-	end
-
 	PA:BuildProfile()
 
 	if PA.Libs.EP then
