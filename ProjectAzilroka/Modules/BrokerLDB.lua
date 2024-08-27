@@ -6,11 +6,11 @@ local _G = _G
 local next, tinsert, tremove = next, tinsert, tremove
 local strfind, strlower, strlen = strfind, strlower, strlen
 
-local CreateFrame = CreateFrame
-local GameTooltip = GameTooltip
-local UIParent = UIParent
+local CreateFrame, GameTooltip, UIParent = CreateFrame, GameTooltip, UIParent
 
-BLDB.Title, BLDB.Description, BLDB.Authors, BLDB.isEnabled = ACL['|cFF16C3F2Broker|r|cFFFFFFFFLDB|r'], ACL['Provides a Custom DataBroker Bar'], 'Azilroka', false
+local LDB = PA.Libs.LDB
+
+BLDB.Title, BLDB.Description, BLDB.Authors, BLDB.isEnabled = 'Broker LDB', ACL['Provides a Custom DataBroker Bar'], 'Azilroka', false
 
 function BLDB:TextUpdate(_, name, _, value)
 	local naText = strfind(strlower(value or ''), 'n/a', nil, true)
@@ -22,7 +22,7 @@ function BLDB:TextUpdate(_, name, _, value)
 	end
 end
 
-function BLDB:AnimateSlide(frame, x, y, duration)
+function BLDB:AnimateSlide(frame, x, y, duration) -- Use LibAnim
 	frame.anim = frame:CreateAnimationGroup('Move_In')
 	frame.anim.in1 = frame.anim:CreateAnimation('Translation')
 	frame.anim.in1:SetDuration(0)
@@ -72,7 +72,7 @@ function BLDB:SlideIn()
 end
 
 function BLDB:Update()
-	for Name, Object in PA.LDB:DataObjectIterator() do
+	for Name, Object in LDB:DataObjectIterator() do
 		BLDB:New(nil, Name, Object)
 	end
 
@@ -169,6 +169,7 @@ function BLDB:New(_, name, object)
 	button:Hide()
 	button.pluginName = name
 	button.pluginObject = object
+	button:RegisterForClicks('AnyDown')
 
 	button:SetFrameStrata('BACKGROUND')
 	button:SetFrameLevel(3)
@@ -190,7 +191,7 @@ function BLDB:New(_, name, object)
 
 	BLDB.PluginObjects[name] = button
 
-	PA.LDB.RegisterCallback(BLDB, 'LibDataBroker_AttributeChanged_'..name, 'TextUpdate')
+	LDB.RegisterCallback(BLDB, 'LibDataBroker_AttributeChanged_'..name, 'TextUpdate')
 
 	button:SetScript('OnEnter', function(s)
 		if s.anim:IsPlaying() then return end
@@ -273,20 +274,15 @@ function BLDB:Initialize()
 	BLDB.isEnabled = true
 
 	BLDB.DropDown = CreateFrame('Frame', 'BLDBDropDown', UIParent, 'UIDropDownMenuTemplate')
+
 	BLDB.Slide = 'In'
-	BLDB.EasyMenu = {}
 
-	BLDB.Buttons = {}
-	BLDB.PluginObjects = {}
+	BLDB.Buttons, BLDB.PluginObjects, BLDB.EasyMenu, BLDB.Whitelist, BLDB.Blacklist, BLDB.Ignore = {}, {}, {}, {}, {}, { 'Cork' }
 
-	BLDB.Ignore = { 'Cork' }
-
-	BLDB.Whitelist = {}
-	BLDB.Blacklist = {}
-
-	PA.LDB.RegisterCallback(BLDB, 'LibDataBroker_DataObjectCreated', 'New')
+	LDB.RegisterCallback(BLDB, 'LibDataBroker_DataObjectCreated', 'New')
 
 	local Frame = CreateFrame('Button', nil, UIParent)
+	BLDB.Frame = Frame
 	Frame.Arrow = Frame:CreateTexture(nil, 'OVERLAY')
 	Frame.Arrow:SetTexture([[Interface\AddOns\ProjectAzilroka\Media\Textures\Arrow]])
 	Frame.Arrow:SetSize(12, 12)
@@ -294,7 +290,7 @@ function BLDB:Initialize()
 	Frame:SetFrameStrata('BACKGROUND')
 	Frame:SetWidth(15)
 	Frame:SetPoint('LEFT', UIParent, 'LEFT', 1, 0)
-	Frame:RegisterForClicks('LeftButtonDown', 'RightButtonDown')
+	Frame:RegisterForClicks('AnyDown')
 	PA:SetTemplate(Frame, 'Transparent')
 	BLDB:AnimateSlide(Frame, -150, 0, 1)
 
@@ -314,11 +310,9 @@ function BLDB:Initialize()
 				BLDB:SlideIn()
 			end
 		else
-			_G.EasyMenu(BLDB.EasyMenu, BLDB.DropDown, 'cursor', 0, 0, 'MENU', 2)
+			PA:EasyMenu(BLDB.EasyMenu, BLDB.DropDown, 'cursor', 0, 0, 'MENU', 2)
 		end
 	end)
-
-	BLDB.Frame = Frame
 
 	BLDB:Update()
 	BLDB:SlideIn()
