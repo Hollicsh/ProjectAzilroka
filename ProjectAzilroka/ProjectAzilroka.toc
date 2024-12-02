@@ -1,4 +1,4 @@
-## Interface: 110005, 40401, 11504
+## Interface: 110007
 ## Title: |cFF16C3F2Project|r|cFFFFFFFFAzilroka|r
 ## Author: Azilroka, Nihilistzsche
 ## Version: 1.93
