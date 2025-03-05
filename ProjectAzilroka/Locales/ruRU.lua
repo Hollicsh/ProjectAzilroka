@@ -22,7 +22,7 @@ ACL['FULLSCREEN_DIALOG'] = true
 ACL['TOOLTIP'] = true
 
 -- Apps/Games
-ACL['App'] = true
+ACL['App'] = 'Приложение'
 ACL['Call of Duty 4'] = true
 ACL['Call of Duty Cold War'] = true
 ACL['Call of Duty Modern Warfare'] = true
@@ -37,12 +37,12 @@ ACL['Mobile'] = true
 ACL['Overwatch'] = true
 
 -- Misc
-ACL['Authors:'] = true
+ACL['Authors:'] = 'Авторы:'
 ACL['Blizzard'] = true
-ACL['Default'] = true
-ACL['Enable'] = true
-ACL['Font Size'] = true
-ACL['General'] = true
+ACL['Default'] = 'По умолчанию'
+ACL['Enable'] = 'Включить'
+ACL['Font Size'] = 'Размер шрифта'
+ACL['General'] = 'Основное'
 
 -- AddOns
 ACL['AddOns'] = true
@@ -369,7 +369,7 @@ ACL['Buttons Per Row'] = true
 ACL['Blizzard'] = true
 ACL['Enable Bar'] = true
 ACL['Hide Garrison'] = true
-ACL['Icon Size'] = true
+ACL['Icon Size'] = 'Размер значка'
 ACL['Minimap Buttons / Bar'] = true
 ACL['Move Garrison Icon'] = true
 ACL['Move Game Time Frame'] = true
@@ -378,36 +378,36 @@ ACL['Move Tracker Icon'] = true
 ACL['Move Queue Status Icon'] = true
 ACL['Reverse Direction'] = true
 ACL['Shadows'] = true
-ACL['Visibility'] = true
+ACL['Visibility'] = 'Видимость'
 
 -- stAddOnManager
 ACL['# Shown AddOns'] = true
 ACL['Are you sure you want to delete %s?'] = true
-ACL['Button Height'] = true
-ACL['Button Width'] = true
+ACL['Button Height'] = 'Высота кнопки'
+ACL['Button Width'] = 'Ширина кнопки'
 ACL['Cancel'] = true
-ACL['Character Select'] = true
+ACL['Character Select'] = 'Выбор персонажа'
 ACL['Class Color Check Texture'] = true
-ACL['Create'] = true
-ACL['Delete'] = true
-ACL['Enable All'] = true
+ACL['Create'] = 'Создать'
+ACL['Delete'] = 'Удалить'
+ACL['Enable All'] = 'Включить всё'
 ACL['Enable Required AddOns'] = true
 ACL['Enter a name for your AddOn Profile:'] = true
 ACL['Enter a name for your new Addon Profile:'] = true
-ACL['Disable All'] = true
-ACL['Font'] = true
+ACL['Disable All'] = 'Отключить всё'
+ACL['Font'] = 'Шрифт'
 ACL['Font Outline'] = true
 ACL['Frame Width'] = true
-ACL['New Profile'] = true
+ACL['New Profile'] = 'Новый профиль'
 ACL['Overwrite'] = true
-ACL['Profiles'] = true
+ACL['Profiles'] = 'Профили'
 ACL['Reload'] = true
 ACL['Required'] = true
-ACL['Search'] = true
-ACL['Texture'] = true
+ACL['Search'] = 'Поиск'
+ACL['Texture'] = 'Текстура'
 ACL['There is already a profile named %s. Do you want to overwrite it?'] = true
 ACL['This will attempt to enable all the "Required" AddOns for the selected AddOn.'] = true
-ACL['Update'] = true
+ACL['Update'] = 'Обновить'
 
 -- Torghast Buffs
 ACL["Index"] = true
