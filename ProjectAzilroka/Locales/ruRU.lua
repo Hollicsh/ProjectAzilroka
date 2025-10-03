@@ -1,6 +1,7 @@
 -- Russian localization file for ruRU. 
 local ACL = LibStub('AceLocale-3.0'):NewLocale('ProjectAzilroka', 'ruRU')
 if not ACL then return end
+
 -- Misc
 ACL["A setting you have changed will change an option for this character only. This setting that you have changed will be uneffected by changing user profiles. Changing this setting requires that you reload your User Interface."] = "Измененная Вами настройка повлияет только на этого персонажа. Эта настройка не зависит от смены профилей пользователя. Для применения этой настройки требуется перезагрузка интерфейса."
 ACL['Controls AddOns in this package'] = "Управление аддонами в этом пакете"
